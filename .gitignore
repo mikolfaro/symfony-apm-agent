@@ -1,0 +1,5 @@
+/build/
+/vendor/
+/tmp/
+.phpcs.cache
+.DS_Store

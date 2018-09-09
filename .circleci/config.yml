@@ -1,0 +1,92 @@
+version: 2
+
+workflows:
+  version: 2
+  nigthly:
+    triggers:
+      - schedule:
+          cron: "42 2 * * *"
+          filters:
+            branches:
+              only:
+              - master
+    jobs:
+      - unit-tests:
+          context: Generic
+      - phpstan:
+          context: Generic
+      - phpcs:
+          context: Generic
+  quality-tools:
+    jobs:
+      - unit-tests:
+          context: Generic
+      - phpstan:
+          context: Generic
+      - phpcs:
+          context: Generic
+
+jobs:
+  unit-tests:
+    docker:
+      - image: circleci/php:7.2
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - project-dependencies-{{ checksum "~/project/composer.lock" }}
+            - composer-cache
+      - run: make ci-dependencies
+      - save_cache:
+          key: project-dependencies-{{ checksum "~/project/composer.lock" }}
+          paths:
+            - ~/project/vendor
+      - save_cache:
+          key: composer-cache
+          paths:
+            - ~/.composer/cache
+      - run: make test-unit
+      - store_test_results:
+          path: build/unit
+      - store_artifacts:
+          path: build/unit
+
+  phpstan:
+    docker:
+      - image: circleci/php:7.2
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - project-dependencies-{{ checksum "~/project/composer.lock" }}
+            - composer-cache
+      - run: make ci-dependencies
+      - save_cache:
+          key: project-dependencies-{{ checksum "~/project/composer.lock" }}
+          paths:
+            - ~/project/vendor
+      - save_cache:
+          key: composer-cache
+          paths:
+            - ~/.composer/cache
+      - run: make phpstan
+
+  phpcs:
+    docker:
+      - image: circleci/php:7.2
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - project-dependencies-{{ checksum "~/project/composer.lock" }}
+            - composer-cache
+      - run: make ci-dependencies
+      - save_cache:
+          key: project-dependencies-{{ checksum "~/project/composer.lock" }}
+          paths:
+            - ~/project/vendor
+      - save_cache:
+          key: composer-cache
+          paths:
+            - ~/.composer/cache
+      - run: make phpcs
