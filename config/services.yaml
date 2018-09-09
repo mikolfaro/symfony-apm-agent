@@ -1,0 +1,14 @@
+services:
+  TechDeCo\ElasticApmAgent\Client\HttplugAsyncClient:
+    class: 'TechDeCo\ElasticApmAgent\Client\HttplugAsyncClient'
+    tags: ['apm_client']
+  TechDeCo\ElasticApmAgent\ClientConfiguration:
+    class: 'TechDeCo\ElasticApmAgent\ClientConfiguration'
+    arguments: ['http://172.25.0.1:8200']
+  MikolFaro\SymfonyApmAgent\Reporter:
+    class: 'MikolFaro\SymfonyApmAgent\Reporter'
+  MikolFaro\SymfonyApmAgent\Tracker:
+    tags:
+    - { name: 'kernel.event_listener', event: 'kernel.request', priority: 250 }
+    - { name: 'kernel.event_listener', event: 'kernel.terminate' }
+    - { name: 'kernel.event_listener', event: 'kernel.exception' }

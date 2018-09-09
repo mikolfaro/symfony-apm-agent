@@ -21,6 +21,8 @@
   "require": {
     "php": "^7.2",
     "php-http/async-client-implementation": "^1.0",
+    "symfony/config": "^4.1",
+    "symfony/dependency-injection": "^4.1",
     "symfony/http-foundation": "^4.1",
     "symfony/http-kernel": "^4.1",
     "symfony/security": "^4.1",
