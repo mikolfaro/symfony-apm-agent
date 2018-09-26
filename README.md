@@ -7,7 +7,22 @@
 
 Coming soon
 
+## Improve performance
+
+This library sends most of the data on `kernel.terminate` event to reduce client
+response delay. Please remember that this trick works only with PHP-FPM.
+For further information look [here](https://symfony.com/doc/current/components/http_kernel.html#component-http-kernel-kernel-terminate).
+
 ### APM dependency
 
 This library relies on [techdeco/elastic-apm-agent](https://github.com/frankkoornstra/elastic-apm-agent)
  to connect to Elastic APM server.
+
+## TODO
+
+- Send user information if present
+- Send controller span
+- Send other spans?
+- DB timings?
+- View timings?
+- Errors?

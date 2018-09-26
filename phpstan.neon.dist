@@ -19,3 +19,8 @@ parameters:
         - '#Call to an undefined method .*::shouldBeCalled#'
         - '#Call to an undefined method .*::shouldNotBeCalled#'
         - '#Call to an undefined method .*::shouldBeCalledTimes#'
+
+
+    excludes_analyse:
+        # Prefer readability in config description
+        - src/DependencyInjection/Configuration.php

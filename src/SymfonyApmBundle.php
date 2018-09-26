@@ -12,7 +12,7 @@ namespace MikolFaro\SymfonyApmAgentBundle;
 use Jean85\PrettyVersions;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class SymfonyApmAgentBundle extends Bundle
+class SymfonyApmBundle extends Bundle
 {
     public static function getVersion(): string
     {
