@@ -7,5 +7,6 @@ RUN pecl install xdebug-2.6.0 \
     && docker-php-ext-enable xdebug
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer config --global repo.packagist composer https://packagist.org
 
 WORKDIR /project
