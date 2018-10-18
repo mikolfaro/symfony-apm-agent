@@ -21,6 +21,7 @@
   },
   "require": {
     "php": "^7.2",
+    "ext-json": "^1.6",
     "jean85/pretty-package-versions": "^1.2",
     "php-http/async-client-implementation": "^1.0",
     "symfony/config": "^4.1",
@@ -29,6 +30,7 @@
     "symfony/http-kernel": "^4.1",
     "symfony/security": "^4.1",
     "symfony/stopwatch": "^4.1",
+    "symfony/yaml": "^4.1",
     "techdeco/elastic-apm-agent": "^0.6.0"
   },
   "require-dev": {
