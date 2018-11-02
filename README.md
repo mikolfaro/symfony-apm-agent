@@ -20,7 +20,6 @@ This library relies on [techdeco/elastic-apm-agent](https://github.com/frankkoor
 
 ## TODO
 
-- Send user information if present
 - Send controller span
 - Send other spans?
 - DB timings?
