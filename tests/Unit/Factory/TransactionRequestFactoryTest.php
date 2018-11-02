@@ -17,7 +17,6 @@ use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -53,9 +52,7 @@ class TransactionRequestFactoryTest extends TestCase
 
     public function testSetUser()
     {
-        $factory = new TransactionRequestFactory(
-            $this->mockLogger, $this->mockSecurity, $this->systemFactory
-        );
+        $factory = new TransactionRequestFactory($this->mockLogger, $this->mockSecurity, $this->systemFactory);
         $transaction = $factory->build($this->buildTransaction(), $this->request, $this->response);
         $this->assertEquals(
             ['username' => 'nice_user'],
@@ -70,6 +67,17 @@ class TransactionRequestFactoryTest extends TestCase
         $factory = new TransactionRequestFactory($this->mockLogger, $this->mockSecurity, $this->systemFactory);
         $transaction = $factory->build($this->buildTransaction(), $this->request, $this->response);
         $this->assertNull($transaction->jsonSerialize()['transactions'][0]['context']['user']);
+    }
+
+    public function testSetResponse()
+    {
+        $factory = new TransactionRequestFactory($this->mockLogger, $this->mockSecurity, $this->systemFactory);
+        $transaction = $factory->build($this->buildTransaction(), $this->request, $this->response);
+
+        $this->assertEquals(
+            ['finished' => true, 'status_code' => Response::HTTP_OK],
+            $transaction->jsonSerialize()['transactions'][0]['context']['response']
+        );
     }
 
     private function buildTransaction(): OpenTransaction
