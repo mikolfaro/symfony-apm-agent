@@ -49,7 +49,8 @@ class TransactionRequestFactory implements TransactionRequestFactoryInterface
         $this->response = $response;
 
         $this->enrichContext($openTransaction);
-        $transaction = $openTransaction->toTransaction();
+        $transaction = $openTransaction->toTransaction()
+            ->resultingIn($this->buildResult());
         $transactionRequest = (new TransactionRequest($this->systemFactory->buildService(), $transaction))
             ->onSystem($this->systemFactory->buildSystem());
 
@@ -100,6 +101,11 @@ class TransactionRequestFactory implements TransactionRequestFactoryInterface
         }
 
         return $messageUser;
+    }
+
+    private function buildResult()
+    {
+        return "HTTP {$this->response->getStatusCode()}";
     }
 
 }

@@ -80,6 +80,14 @@ class TransactionRequestFactoryTest extends TestCase
         );
     }
 
+    public function testSetResult()
+    {
+        $factory = new TransactionRequestFactory($this->mockLogger, $this->mockSecurity, $this->systemFactory);
+        $transaction = $factory->build($this->buildTransaction(), $this->request, $this->response);
+
+        $this->assertEquals('HTTP 200', $transaction->jsonSerialize()['transactions'][0]['result']);
+    }
+
     private function buildTransaction(): OpenTransaction
     {
         return new OpenTransaction(
