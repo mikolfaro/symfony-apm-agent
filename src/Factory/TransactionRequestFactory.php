@@ -94,10 +94,10 @@ class TransactionRequestFactory implements TransactionRequestFactoryInterface
         $messageUser = (new UserMessage())->withUsername($user->getUsername());
 
         if (method_exists($user, 'getId')) {
-            $messageUser->withId($user->getId());
+            $messageUser = $messageUser->withId($user->getId());
         }
         if (method_exists($user, 'getEmail')) {
-            $messageUser->withEmail($user->getEmail());
+            $messageUser = $messageUser->withEmail($user->getEmail());
         }
 
         return $messageUser;
