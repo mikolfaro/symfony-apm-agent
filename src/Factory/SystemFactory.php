@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace MikolFaro\SymfonyApmAgentBundle\Factory;
 
 
+use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -21,6 +22,8 @@ use function \php_uname;
 
 class SystemFactory implements SystemFactoryInterface
 {
+    const PACKAGE_NAME = 'mikolfaro/symfony-apm-agent';
+
     private $kernel;
     private $logger;
 
@@ -40,7 +43,8 @@ class SystemFactory implements SystemFactoryInterface
 
     public function buildService(): Service
     {
-        $agent = new VersionedName('techdeco/elastic-apm-agent', 'dev-master');
+        $version = PrettyVersions::getVersion(self::PACKAGE_NAME);
+        $agent = new VersionedName(self::PACKAGE_NAME, $version->getPrettyVersion());
         $framework = new VersionedName('Symfony', Kernel::VERSION);
         $language = new VersionedName('PHP', PHP_VERSION);
         $runtime = new VersionedName(php_sapi_name(), '');
