@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace MikolFaro\SymfonyApmAgentBundle\Factory;
 
 
-use GuzzleHttp\Psr7\Uri;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Exception\InvalidUuidStringException;
 use Ramsey\Uuid\Uuid;
@@ -19,8 +18,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\KernelInterface;
 use TechDeCo\ElasticApmAgent\Convenience\OpenTransaction;
 use TechDeCo\ElasticApmAgent\Message\Timestamp;
-use TechDeCo\ElasticApmAgent\Message\Request as MessageRequest;
-use TechDeCo\ElasticApmAgent\Message\Url;
 
 class OpenTransactionFactory implements OpenTransactionFactoryInterface
 {
@@ -47,10 +44,6 @@ class OpenTransactionFactory implements OpenTransactionFactoryInterface
             'request',
             $this->getCorrelationId($this->request)
         );
-
-        $transaction->setContext($transaction->getContext()->withRequest(
-            $this->buildRequest($request)
-        ));
 
         return $transaction;
     }
@@ -84,13 +77,5 @@ class OpenTransactionFactory implements OpenTransactionFactoryInterface
             $this->logger->debug("Failed to parse header {$headerName} as uuid");
         }
         return null;
-    }
-
-    private function buildRequest(Request $request): MessageRequest
-    {
-        $url = Url::fromUri(new Uri($request->getUri()));
-        $requestMessage = new MessageRequest($request->getMethod(), $url);
-
-        return $requestMessage;
     }
 }

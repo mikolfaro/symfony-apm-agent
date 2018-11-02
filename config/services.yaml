@@ -12,7 +12,7 @@ services:
     arguments:
       - '@Psr\Log\LoggerInterface'
       - '@TechDeCo\ElasticApmAgent\Client'
-      - '@MikolFaro\SymfonyApmAgentBundle\Factory\SystemFactoryInterface'
+      - '@symfony_apm_agent.transaction_request_factory'
     tags:
       - { name: kernel.event_listener, event: kernel.terminate, priority: '%symfony_apm_agent.listener_priorities.terminate%' }
 
@@ -21,6 +21,13 @@ services:
     arguments:
       - '@Symfony\Component\HttpKernel\KernelInterface'
       - '@Psr\Log\LoggerInterface'
+
+  symfony_apm_agent.transaction_request_factory:
+    class: MikolFaro\SymfonyApmAgentBundle\Factory\TransactionRequestFactory
+    arguments:
+      - '@Psr\Log\LoggerInterface'
+      - '@Symfony\Component\Security\Core\Security'
+      - '@MikolFaro\SymfonyApmAgentBundle\Factory\SystemFactoryInterface'
 
   TechDeCo\ElasticApmAgent\Client:
     class: 'TechDeCo\ElasticApmAgent\Client\HttplugAsyncClient'

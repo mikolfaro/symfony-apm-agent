@@ -9,7 +9,7 @@
 namespace MikolFaro\SymfonyApmAgentBundle\Tests\Unit\Listener;
 
 
-use MikolFaro\SymfonyApmAgentBundle\Factory\SystemFactory;
+use MikolFaro\SymfonyApmAgentBundle\Factory\TransactionRequestFactoryInterface;
 use MikolFaro\SymfonyApmAgentBundle\Listener\CloseTransactionListener;
 use MikolFaro\SymfonyApmAgentBundle\Tests\MockUtils;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +19,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use TechDeCo\ElasticApmAgent\Client;
 use TechDeCo\ElasticApmAgent\Convenience\OpenTransaction;
+use TechDeCo\ElasticApmAgent\Message\Service;
 use TechDeCo\ElasticApmAgent\Message\Timestamp;
+use TechDeCo\ElasticApmAgent\Message\Transaction;
+use TechDeCo\ElasticApmAgent\Message\VersionedName;
+use TechDeCo\ElasticApmAgent\Request\Transaction as TransactionRequest;
 
 class CloseTransactionListenerTest extends TestCase
 {
@@ -31,7 +35,7 @@ class CloseTransactionListenerTest extends TestCase
     /** @var Response $response */
     private $response;
     private $mockApmClient;
-    private $systemFactory;
+    private $mockTransactionRequestFactory;
     /** @var OpenTransaction $transaction */
     private $transaction;
 
@@ -39,8 +43,6 @@ class CloseTransactionListenerTest extends TestCase
     {
         parent::setUp();
         $this->setUpMocks();
-        $this->mockKernel->expects($this->once())
-            ->method('getEnvironment')->willReturn('test');
 
         $this->request = Request::create('http://example.com/foo?_path=foo%3Dbar%26_controller%3Dfoo');
         $this->request->attributes->set('_controller', null); // Prevents going in to routing process
@@ -48,7 +50,8 @@ class CloseTransactionListenerTest extends TestCase
 
         $this->event = new PostResponseEvent($this->mockKernel, $this->request, $this->response);
         $this->mockApmClient = $this->buildMockApmClient();
-        $this->systemFactory = new SystemFactory($this->mockKernel, $this->mockLogger);
+
+        $this->mockTransactionRequestFactory = $this->buildMockTransactionRequestFactory();
         $this->transaction = $this->buildTransaction();
     }
 
@@ -59,7 +62,7 @@ class CloseTransactionListenerTest extends TestCase
 
         $this->request->attributes->set('apm_transaction', $this->transaction);
 
-        $listener = new CloseTransactionListener($this->mockLogger, $this->mockApmClient, $this->systemFactory);
+        $listener = new CloseTransactionListener($this->mockLogger, $this->mockApmClient, $this->mockTransactionRequestFactory);
         $listener->onKernelTerminate($this->event);
     }
 
@@ -79,5 +82,17 @@ class CloseTransactionListenerTest extends TestCase
             'request',
             Uuid::uuid4()
         );
+    }
+
+    private function buildMockTransactionRequestFactory()
+    {
+        $agent = new VersionedName('agent', '1.2.3');
+        $service = new Service($agent, 'asd');
+        $transaction = new TransactionRequest($service);
+
+        $mock = $this->getMockBuilder(TransactionRequestFactoryInterface::class)
+            ->getMock();
+        $mock->expects($this->once())->method('build')->willReturn($transaction);
+        return $mock;
     }
 }

@@ -10,12 +10,11 @@ declare(strict_types=1);
 namespace MikolFaro\SymfonyApmAgentBundle\Listener;
 
 
-use MikolFaro\SymfonyApmAgentBundle\Factory\SystemFactory;
+use MikolFaro\SymfonyApmAgentBundle\Factory\TransactionRequestFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use TechDeCo\ElasticApmAgent\Client;
 use TechDeCo\ElasticApmAgent\Convenience\OpenTransaction;
-use TechDeCo\ElasticApmAgent\Request\Transaction as TransactionRequest;
 
 /**
  * Class CloseTransactionListener
@@ -30,17 +29,17 @@ class CloseTransactionListener
 {
     private $logger;
     private $apmClient;
-    private $systemFactory;
+    private $closeTransactionFactory;
 
     public function __construct(
         LoggerInterface $logger,
         Client $apmClient,
-        SystemFactory $systemFactory
+        TransactionRequestFactoryInterface $closeTransactionFactory
     )
     {
         $this->logger = $logger;
         $this->apmClient = $apmClient;
-        $this->systemFactory = $systemFactory;
+        $this->closeTransactionFactory = $closeTransactionFactory;
     }
 
     public function onKernelTerminate(PostResponseEvent $event)
@@ -49,14 +48,11 @@ class CloseTransactionListener
         if (!$request->attributes->has('apm_transaction')) {
             return;
         }
+        $response = $event->getResponse();
 
         /** @var OpenTransaction $openTransaction */
         $openTransaction = $request->attributes->get('apm_transaction');
-        $transaction = $openTransaction->toTransaction();
-
-        $transactionRequest = (new TransactionRequest($this->systemFactory->buildService(), $transaction))
-            ->onSystem($this->systemFactory->buildSystem());
-
+        $transactionRequest = $this->closeTransactionFactory->build($openTransaction, $request, $response);
         $this->apmClient->sendTransaction($transactionRequest);
     }
 }

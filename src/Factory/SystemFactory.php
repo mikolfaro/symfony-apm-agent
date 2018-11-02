@@ -35,10 +35,16 @@ class SystemFactory implements SystemFactoryInterface
 
     public function buildSystem(): System
     {
-        return (new System())
-            ->atHost(gethostname())
+        $system = (new System())
             ->onArchitecture(php_uname('a'))
             ->onPlatform(php_uname('s'));
+
+        $hostname = gethostname();
+        if ($hostname) {
+            $system = $system->atHost($hostname);
+        }
+
+        return $system;
     }
 
     public function buildService(): Service
