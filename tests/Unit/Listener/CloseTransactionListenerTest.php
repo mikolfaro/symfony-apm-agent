@@ -12,6 +12,7 @@ namespace MikolFaro\SymfonyApmAgentBundle\Tests\Unit\Listener;
 use MikolFaro\SymfonyApmAgentBundle\Factory\TransactionRequestFactoryInterface;
 use MikolFaro\SymfonyApmAgentBundle\Listener\CloseTransactionListener;
 use MikolFaro\SymfonyApmAgentBundle\Tests\MockUtils;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,9 +34,9 @@ class CloseTransactionListenerTest extends TestCase
     private $request;
     /** @var Response $response */
     private $response;
-    /** @var Client $mockApmClient */
+    /** @var Client|MockObject $mockApmClient */
     private $mockApmClient;
-    /** @var TransactionRequestFactoryInterface $mockTransactionRequestFactory */
+    /** @var TransactionRequestFactoryInterface|MockObject $mockTransactionRequestFactory */
     private $mockTransactionRequestFactory;
     /** @var OpenTransaction $transaction */
     private $transaction;
