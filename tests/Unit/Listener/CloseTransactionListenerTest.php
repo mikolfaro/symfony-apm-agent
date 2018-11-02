@@ -34,7 +34,9 @@ class CloseTransactionListenerTest extends TestCase
     private $request;
     /** @var Response $response */
     private $response;
+    /** @var Client $mockApmClient */
     private $mockApmClient;
+    /** @var TransactionRequestFactoryInterface $mockTransactionRequestFactory */
     private $mockTransactionRequestFactory;
     /** @var OpenTransaction $transaction */
     private $transaction;
