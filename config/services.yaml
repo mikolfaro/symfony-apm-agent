@@ -16,6 +16,13 @@ services:
     tags:
       - { name: kernel.event_listener, event: kernel.terminate, priority: '%symfony_apm_agent.listener_priorities.terminate%' }
 
+  symfony_apm_agent.exception_listener:
+    class: '%symfony_apm_agent.exception_listener%'
+    arguments:
+      - '@symfony_apm_agent.error_message_factory'
+    tags:
+      - { name: kernel.event_listener, event: kernel.exception, priority: '%symfony_apm_agent.listener_priorities.exception' }
+
   symfony_apm_agent.open_transaction_factory:
     class: MikolFaro\SymfonyApmAgentBundle\Factory\OpenTransactionFactory
     arguments:
@@ -28,6 +35,9 @@ services:
       - '@Psr\Log\LoggerInterface'
       - '@Symfony\Component\Security\Core\Security'
       - '@MikolFaro\SymfonyApmAgentBundle\Factory\SystemFactoryInterface'
+
+  symfony_apm_agent.error_message_factory:
+    class: MikolFaro\SymfonyApmAgentBundle\Factory\ErrorMessageFactory
 
   TechDeCo\ElasticApmAgent\Client:
     class: 'TechDeCo\ElasticApmAgent\Client\HttplugAsyncClient'

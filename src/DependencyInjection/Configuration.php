@@ -12,6 +12,7 @@ namespace MikolFaro\SymfonyApmAgentBundle\DependencyInjection;
 
 use MikolFaro\SymfonyApmAgentBundle\Factory\OpenTransactionFactory;
 use MikolFaro\SymfonyApmAgentBundle\Listener\CloseTransactionListener;
+use MikolFaro\SymfonyApmAgentBundle\Listener\ExceptionListener;
 use MikolFaro\SymfonyApmAgentBundle\Listener\OpenTransactionListener;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -36,6 +37,9 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('open_transaction_listener')
                     ->defaultValue(OpenTransactionListener::class)
                 ->end()
+                ->scalarNode('exception_listener')
+                    ->defaultValue(ExceptionListener::class)
+                ->end()
                 ->scalarNode('close_transaction_listener')
                     ->defaultValue(CloseTransactionListener::class)
                 ->end()
@@ -55,6 +59,7 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('request')->defaultValue(0)->end()
                         ->scalarNode('terminate')->defaultValue(20)->end()
+                        ->scalarNode('exception')->defaultValue(100)->end()
                     ->end()
                 ->end()
             ->end()
