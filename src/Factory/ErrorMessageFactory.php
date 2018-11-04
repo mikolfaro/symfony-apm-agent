@@ -35,7 +35,7 @@ class ErrorMessageFactory implements ErrorMessageFactoryInterface
 
     private function buildStackFrame(Throwable $throwable): array
     {
-        return array_map(
+        $frames = array_map(
             function (array $frame): StackTraceFrame {
                 $function = implode('::', array_filter([
                     $frame['class'] ?? null,
@@ -50,5 +50,11 @@ class ErrorMessageFactory implements ErrorMessageFactoryInterface
             },
             $throwable->getTrace()
         );
+
+        // Workaround
+        // http://php.net/manual/it/exception.gettrace.php#107563
+        array_unshift($frames, new StackTraceFrame($throwable->getFile(), $throwable->getLine()));
+
+        return $frames;
     }
 }

@@ -60,8 +60,9 @@ class ErrorMessageFactoryTest extends TestCase
         $factory = new ErrorMessageFactory();
         $errorMessage = $factory->build($this->exception);
         $exceptionData = $errorMessage->jsonSerialize()['exception'];
-
         $this->assertNotEmpty($exceptionData['stacktrace']);
+        $this->assertEquals(72, $exceptionData['stacktrace'][0]['lineno']);
+        $this->assertRegExp('/.*\/tests\/Unit\/Factory\/ErrorMessageFactoryTest\.php/', $exceptionData['stacktrace'][0]['filename']);
     }
 
     private function buildException()
