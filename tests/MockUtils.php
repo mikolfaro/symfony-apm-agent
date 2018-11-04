@@ -9,13 +9,15 @@
 namespace MikolFaro\SymfonyApmAgentBundle\Tests;
 
 
+use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 trait MockUtils
 {
+    /** @var LoggerInterface|MockObject */
     private $mockLogger;
-
+    /** @var KernelInterface|MockObject */
     private $mockKernel;
 
     protected function setUpMocks()

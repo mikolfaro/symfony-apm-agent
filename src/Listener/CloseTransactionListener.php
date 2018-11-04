@@ -10,8 +10,11 @@ declare(strict_types=1);
 namespace MikolFaro\SymfonyApmAgentBundle\Listener;
 
 
+use MikolFaro\SymfonyApmAgentBundle\Factory\ErrorRequestFactoryInterface;
 use MikolFaro\SymfonyApmAgentBundle\Factory\TransactionRequestFactoryInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use TechDeCo\ElasticApmAgent\Client;
 use TechDeCo\ElasticApmAgent\Convenience\OpenTransaction;
@@ -29,30 +32,47 @@ class CloseTransactionListener
 {
     private $logger;
     private $apmClient;
-    private $closeTransactionFactory;
+    private $transactionRequestFactory;
+    private $errorRequestFactory;
 
     public function __construct(
         LoggerInterface $logger,
         Client $apmClient,
-        TransactionRequestFactoryInterface $closeTransactionFactory
+        TransactionRequestFactoryInterface $closeTransactionFactory,
+        ErrorRequestFactoryInterface $errorRequestFactory
     )
     {
         $this->logger = $logger;
         $this->apmClient = $apmClient;
-        $this->closeTransactionFactory = $closeTransactionFactory;
+        $this->transactionRequestFactory = $closeTransactionFactory;
+        $this->errorRequestFactory = $errorRequestFactory;
     }
 
-    public function onKernelTerminate(PostResponseEvent $event)
+    public function onKernelTerminate(PostResponseEvent $event): void
     {
         $request = $event->getRequest();
         if (!$request->attributes->has('apm_transaction')) {
             return;
         }
         $response = $event->getResponse();
+        $this->sendTransaction($request, $response);
+        $this->sendErrors($request, $response);
+    }
 
+    protected function sendTransaction(Request $request, Response $response): void
+    {
         /** @var OpenTransaction $openTransaction */
         $openTransaction = $request->attributes->get('apm_transaction');
-        $transactionRequest = $this->closeTransactionFactory->build($openTransaction, $request, $response);
+        $transactionRequest = $this->transactionRequestFactory->build($openTransaction, $request, $response);
         $this->apmClient->sendTransaction($transactionRequest);
+    }
+
+    protected function sendErrors(Request $request, Response $response): void
+    {
+        if ($request->attributes->has('apm_errors')) {
+            $errorMessages = $request->attributes->get('apm_errors');
+            $errorRequest = $this->errorRequestFactory->build($errorMessages, $request, $response);
+            $this->apmClient->sendError($errorRequest);
+        }
     }
 }

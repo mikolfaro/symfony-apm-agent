@@ -9,6 +9,7 @@
 namespace MikolFaro\SymfonyApmAgentBundle\Tests\Unit\Listener;
 
 
+use MikolFaro\SymfonyApmAgentBundle\Factory\ErrorRequestFactoryInterface;
 use MikolFaro\SymfonyApmAgentBundle\Factory\TransactionRequestFactoryInterface;
 use MikolFaro\SymfonyApmAgentBundle\Listener\CloseTransactionListener;
 use MikolFaro\SymfonyApmAgentBundle\Tests\MockUtils;
@@ -20,9 +21,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use TechDeCo\ElasticApmAgent\Client;
 use TechDeCo\ElasticApmAgent\Convenience\OpenTransaction;
+use TechDeCo\ElasticApmAgent\Message\Error as ErrorMessage;
+use TechDeCo\ElasticApmAgent\Message\Exception as ExceptionMessage;
 use TechDeCo\ElasticApmAgent\Message\Service;
 use TechDeCo\ElasticApmAgent\Message\Timestamp;
 use TechDeCo\ElasticApmAgent\Message\VersionedName;
+use TechDeCo\ElasticApmAgent\Request\Error as ErrorRequest;
 use TechDeCo\ElasticApmAgent\Request\Transaction as TransactionRequest;
 
 class CloseTransactionListenerTest extends TestCase
@@ -40,6 +44,10 @@ class CloseTransactionListenerTest extends TestCase
     private $mockTransactionRequestFactory;
     /** @var OpenTransaction $transaction */
     private $transaction;
+    /** @var ErrorRequestFactoryInterface|MockObject $mockErrorRequestFactory */
+    private $mockErrorRequestFactory;
+    /** @var ErrorMessage[] */
+    private $errors;
 
     protected function setUp()
     {
@@ -55,16 +63,43 @@ class CloseTransactionListenerTest extends TestCase
 
         $this->mockTransactionRequestFactory = $this->buildMockTransactionRequestFactory();
         $this->transaction = $this->buildTransaction();
+        $this->mockErrorRequestFactory = $this->buildMockErrorRequestFactory();
+        $this->errors = $this->buildErrors();
     }
 
     public function testSendTransaction()
     {
         $this->mockApmClient->expects($this->once())
             ->method('sendTransaction');
+        $this->mockErrorRequestFactory->expects($this->never())
+            ->method('build')->willReturn(null);
 
         $this->request->attributes->set('apm_transaction', $this->transaction);
 
-        $listener = new CloseTransactionListener($this->mockLogger, $this->mockApmClient, $this->mockTransactionRequestFactory);
+        $listener = new CloseTransactionListener(
+            $this->mockLogger, $this->mockApmClient,
+            $this->mockTransactionRequestFactory, $this->mockErrorRequestFactory
+        );
+        $listener->onKernelTerminate($this->event);
+    }
+
+    public function testSendErrorsWhenPresent()
+    {
+        $agent = new VersionedName('agent', '1.2.3');
+        $service = new Service($agent, 'asd');
+
+        $this->mockApmClient->expects($this->once())
+            ->method('sendTransaction');
+        $this->mockErrorRequestFactory->expects($this->once())
+            ->method('build')->willReturn(new ErrorRequest($service));
+
+        $this->request->attributes->set('apm_transaction', $this->transaction);
+        $this->request->attributes->set('apm_errors', $this->errors);
+
+        $listener = new CloseTransactionListener(
+            $this->mockLogger, $this->mockApmClient,
+            $this->mockTransactionRequestFactory, $this->mockErrorRequestFactory
+        );
         $listener->onKernelTerminate($this->event);
     }
 
@@ -96,5 +131,18 @@ class CloseTransactionListenerTest extends TestCase
             ->getMock();
         $mock->expects($this->once())->method('build')->willReturn($transaction);
         return $mock;
+    }
+
+    private function buildMockErrorRequestFactory()
+    {
+        $mock = $this->getMockBuilder(ErrorRequestFactoryInterface::class)
+            ->getMock();
+        return $mock;
+    }
+
+    private function buildErrors(): array
+    {
+        $exceptionMessage = new ExceptionMessage('Asd');
+        return [ErrorMessage::fromException($exceptionMessage, new Timestamp())];
     }
 }
