@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Created by IntelliJ IDEA.
  * User: Mikol Faro <m.faro@engaged.it>
@@ -22,7 +23,8 @@ class ErrorMessageFactory implements ErrorMessageFactoryInterface
     public function build(Throwable $throwable): ErrorMessage
     {
         return ErrorMessage::fromException($this->buildException($throwable), new Timestamp())
-            ->withId(Uuid::uuid4());
+            ->withId(Uuid::uuid4())
+            ->withCulprit($this->buildCulprit($throwable));
     }
 
     private function buildException(Throwable $throwable): ExceptionMessage
@@ -56,5 +58,14 @@ class ErrorMessageFactory implements ErrorMessageFactoryInterface
         array_unshift($frames, new StackTraceFrame($throwable->getFile(), $throwable->getLine()));
 
         return $frames;
+    }
+
+    private function buildCulprit(Throwable $throwable): string
+    {
+        $frame = $throwable->getTrace()[0];
+        return implode('::', array_filter([
+            $frame['class'] ?? null,
+            $frame['function'] ?? null,
+        ]));
     }
 }

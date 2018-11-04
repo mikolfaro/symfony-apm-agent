@@ -28,6 +28,29 @@ class ErrorMessageFactoryTest extends TestCase
         $this->exception = $this->buildException();
     }
 
+    private function buildException()
+    {
+        $e = null;
+        try {
+            throw new RuntimeException('A message exception', 314);
+        } catch (RuntimeException $exception) {
+            $e = $exception;
+        }
+        return $e;
+    }
+
+    public function testErrorCulprit()
+    {
+        $factory = new ErrorMessageFactory();
+        $errorMessage = $factory->build($this->exception);
+        $errorData = $errorMessage->jsonSerialize();
+
+        $this->assertEquals(
+            'MikolFaro\\SymfonyApmAgentBundle\\Tests\\Unit\\Factory\\ErrorMessageFactoryTest::buildException',
+            $errorData['culprit']
+        );
+    }
+
     public function testExceptionMessage()
     {
         $factory = new ErrorMessageFactory();
@@ -61,18 +84,7 @@ class ErrorMessageFactoryTest extends TestCase
         $errorMessage = $factory->build($this->exception);
         $exceptionData = $errorMessage->jsonSerialize()['exception'];
         $this->assertNotEmpty($exceptionData['stacktrace']);
-        $this->assertEquals(72, $exceptionData['stacktrace'][0]['lineno']);
+        $this->assertEquals(35, $exceptionData['stacktrace'][0]['lineno']);
         $this->assertRegExp('/.*\/tests\/Unit\/Factory\/ErrorMessageFactoryTest\.php/', $exceptionData['stacktrace'][0]['filename']);
-    }
-
-    private function buildException()
-    {
-        $e = null;
-        try {
-            throw new RuntimeException('A message exception', 314);
-        } catch (RuntimeException $exception) {
-            $e = $exception;
-        }
-        return $e;
     }
 }

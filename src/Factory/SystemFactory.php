@@ -10,12 +10,19 @@ declare(strict_types=1);
 namespace MikolFaro\SymfonyApmAgentBundle\Factory;
 
 
+use GuzzleHttp\Psr7\Uri;
 use Jean85\PrettyVersions;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpKernel\KernelInterface;
+use TechDeCo\ElasticApmAgent\Message\Context;
+use TechDeCo\ElasticApmAgent\Message\Request as RequestMessage;
+use TechDeCo\ElasticApmAgent\Message\Response as ResponseMessage;
 use TechDeCo\ElasticApmAgent\Message\Service;
 use TechDeCo\ElasticApmAgent\Message\System;
+use TechDeCo\ElasticApmAgent\Message\Url;
 use TechDeCo\ElasticApmAgent\Message\VersionedName;
 use function \gethostname;
 use function \php_uname;
@@ -61,5 +68,26 @@ class SystemFactory implements SystemFactoryInterface
             ->withRuntime($runtime)
             ->inEnvironment($this->kernel->getEnvironment());
         return $service;
+    }
+
+    public function enrichContext(Context $context, Request $request, Response $response): Context
+    {
+        return $context
+            ->withRequest($this->buildRequestMessage($request))
+            ->withResponse($this->buildResponseMessage($response));
+    }
+
+    private function buildRequestMessage(Request $request): RequestMessage
+    {
+        $url = Url::fromUri(new Uri($request->getUri()));
+        $requestMessage = new RequestMessage($request->getMethod(), $url);
+        return $requestMessage;
+    }
+
+    private function buildResponseMessage(Response $response): ResponseMessage
+    {
+        return (new ResponseMessage())
+            ->resultingInStatusCode($response->getStatusCode())
+            ->thatIsFinished();
     }
 }

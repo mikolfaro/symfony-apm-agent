@@ -17,6 +17,9 @@ use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use TechDeCo\ElasticApmAgent\Message\Exception as ExceptionMessage;
+use TechDeCo\ElasticApmAgent\Message\Error as ErrorMessage;
+use TechDeCo\ElasticApmAgent\Message\Timestamp;
 
 class ErrorRequestFactoryTest extends TestCase
 {
@@ -28,6 +31,7 @@ class ErrorRequestFactoryTest extends TestCase
     private $response;
 
     private $systemFactory;
+    private  $errorMessages;
     private $mockSecurity;
 
     protected function setUp()
@@ -40,15 +44,36 @@ class ErrorRequestFactoryTest extends TestCase
         $this->response = $this->buildResponse();
 
         $this->systemFactory = new SystemFactory($this->mockKernel, $this->mockLogger);
+        $this->errorMessages = $this->buildErrorMessages();
     }
 
-    public function testAsd()
+    /**
+     * @return ErrorMessage[]
+     * @throws \Exception
+     */
+    protected function buildErrorMessages(): array
     {
-        $errorMessages = [];
-
-        $factory = new ErrorRequestFactory($this->systemFactory);
-        $factory->build($errorMessages, $this->request, $this->response);
+        $exceptionMessage = new ExceptionMessage('Asd');
+        return [ErrorMessage::fromException($exceptionMessage, new Timestamp())];
     }
+
+    public function testSystem()
+    {
+        $factory = new ErrorRequestFactory($this->systemFactory);
+        $request = $factory->build($this->errorMessages, $this->request, $this->response);
+        $systemData = $request->jsonSerialize()['system'];
+
+        $this->assertNotNull($systemData);
+    }
+
+    public function testContext()
+    {
+        $factory = new ErrorRequestFactory($this->systemFactory);
+        $request = $factory->build($this->errorMessages, $this->request, $this->response);
+        $errorData = $request->jsonSerialize()['errors'][0];
+        $this->assertNotNull($errorData['context']);
+    }
+
 
     protected function buildRequest(): Request
     {

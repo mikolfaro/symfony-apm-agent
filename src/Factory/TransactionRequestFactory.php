@@ -9,15 +9,11 @@ declare(strict_types=1);
 
 namespace MikolFaro\SymfonyApmAgentBundle\Factory;
 
-use GuzzleHttp\Psr7\Uri;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Security;
 use TechDeCo\ElasticApmAgent\Convenience\OpenTransaction;
-use TechDeCo\ElasticApmAgent\Message\Request as RequestMessage;
-use TechDeCo\ElasticApmAgent\Message\Response as ResponseMessage;
-use TechDeCo\ElasticApmAgent\Message\Url;
 use TechDeCo\ElasticApmAgent\Message\User as UserMessage;
 use TechDeCo\ElasticApmAgent\Request\Transaction as TransactionRequest;
 
@@ -59,29 +55,15 @@ class TransactionRequestFactory implements TransactionRequestFactoryInterface
 
     private function enrichContext(OpenTransaction $openTransaction)
     {
-        $richContext = $openTransaction->getContext()
-            ->withRequest($this->buildRequestMessage())
-            ->withResponse($this->buildResponseMessage());
+        $richContext = $this->systemFactory->enrichContext(
+            $openTransaction->getContext(), $this->request, $this->response
+        );
         $user = $this->buildUser();
         if (!is_null($user)) {
             $richContext = $richContext->withUser($user);
         }
 
         $openTransaction->setContext($richContext);
-    }
-
-    private function buildRequestMessage(): RequestMessage
-    {
-        $url = Url::fromUri(new Uri($this->request->getUri()));
-        $requestMessage = new RequestMessage($this->request->getMethod(), $url);
-        return $requestMessage;
-    }
-
-    private function buildResponseMessage(): ResponseMessage
-    {
-        return (new ResponseMessage())
-            ->resultingInStatusCode($this->response->getStatusCode())
-            ->thatIsFinished();
     }
 
     private function buildUser(): ?UserMessage
